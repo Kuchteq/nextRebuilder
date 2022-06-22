@@ -1,7 +1,9 @@
 const projectName = "scuba-front"
+const properModel = "shared"
 const rebuildRoute = "/b1ca7d9a-9261-47d5-8020-da6a3409b033"
 const reloadRoute = "/694884e4-f213-11ec-b939-0242ac120002"
+const onlyFetchRoute = "/8d7fd8f0-f216-11ec-b939-0242ac120002"
 const pathToProject = '/mnt/d/dev/scuba-front/'
 const pathToConfig = pathToProject + '/config/fetchedShared.json'
-
-module.exports = { projectName, rebuildRoute, reloadRoute, pathToProject, pathToConfig }
+const strapiUrl = "http://dev1.strona.agency/strapi/api/"
+module.exports = { projectName, properModel, rebuildRoute, reloadRoute, onlyFetchRoute, pathToProject, pathToConfig, strapiUrl }
