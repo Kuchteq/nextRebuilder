@@ -1,0 +1,17 @@
+{
+  "name": "rebuilder",
+  "version": "0.1.0",
+  "description": "Tool that rebuilds an next.js app running with pm2 on webhook call",
+  "main": "rebuilder.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mariusz Kuchta",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.13.4",
+    "koa-body": "^5.0.0",
+    "koa-router": "^10.1.1",
+    "uuid": "^8.3.2"
+  }
+}
