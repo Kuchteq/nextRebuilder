@@ -1,14 +1,19 @@
 const Koa = require('koa');
 const Router = require('koa-router');
-const { projectName, rebuildRoute, properModels, navigationSlugs, reloadRoute, onlyFetchRoute, pathToProject, pathToConfig, strapiUrl } = require('./_settings.js');
+const { projectName, rebuildRoute, properModels, navigationSlugs, reloadRoute, onlyFetchRoute, pathToProject, pathToConfig, strapiUrl, locales } = require('./_settings.js');
 const app = new Koa();
 const router = new Router();
 const { exec } = require("child_process");
 const fs = require('fs');
 const koaBody = require('koa-body');
-const pm2 = require('pm2');
+// const pm2 = require('pm2');
 const axios = require('axios');
+const contentURL = `http://dev1.strona.agency/strapi/api/`;
 
+const ask = axios.create({
+    baseURL: contentURL,
+    params: { populate: "deep" }
+});
 const triggerRebuild = async () => {
     console.log('Data saved, starting rebuild')
     exec(`cd ${pathToProject} && npm run build`, (error, stdout, stderr) => {
@@ -31,16 +36,24 @@ router.post(rebuildRoute, koaBody(), async (ctx, next) => {
         console.log('Webhook received, saving data');
         let entry = ctx.request.body.entry;
         let savePath = ''
+        let response = {};
         if ((navigationSlugs.findIndex((a) => a == entry.slug) != -1) && model == 'navigation') {
             savePath = pathToConfig + entry.slug + ".json"
-            entry = (await axios.get(strapiUrl + 'navigation/render/' + entry.slug)).data
+            for (let locale of locales) {
+                response[locale] = (await ask.get('navigation/render/' + entry.slug, { params: { "locale": locale } })).data
+            }
         }
         else {
             savePath = pathToConfig + model + ".json"
+            for (let locale of locales) {
+                response[locale] = (await ask.get('shared', { params: { "locale": locale } })).data.data
+            }
         }
+
         console.log("Data Fetched")
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        fs.writeFileSync(savePath, JSON.stringify(entry))
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        fs.writeFileSync(savePath, JSON.stringify(response))
         await triggerRebuild()
         ctx.body = 'Triggered rebuild'
     }
@@ -57,13 +70,21 @@ router.post(reloadRoute, (ctx) => {
     }, 1000));
     ctx.body = 'PM2 restarted'
 })
-router.post(onlyFetchRoute, (ctx) => {
-    axios.get(strapiUrl + properModel).then((response) => {
-        fs.writeFile(pathToConfig, JSON.stringify(response.data.data), () => {
-            console.log("Data Fetched")
-        })
-
-    })
+router.post(onlyFetchRoute, async (ctx) => {
+    let sharedResponse = {}
+    for (let slug of navigationSlugs) {
+        let navResponse = {};
+        savePath = pathToConfig + slug + ".json"
+        for (let locale of locales) {
+            navResponse[locale] = (await ask.get('navigation/render/' + slug, { params: { "locale": locale } })).data
+        }
+        fs.writeFileSync(savePath, JSON.stringify(navResponse))
+    }
+    for (let locale of locales) {
+        sharedResponse[locale] = (await ask.get('shared', { params: { "locale": locale } })).data.data
+    }
+    savePath = pathToConfig + "shared.json"
+    fs.writeFileSync(savePath, JSON.stringify(sharedResponse))
     ctx.body = 'Data Fetched'
 })
 
