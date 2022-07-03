@@ -1,6 +1,6 @@
 const Koa = require('koa');
 const Router = require('koa-router');
-const { projectName, rebuildRoute, properModels, navigationSlugs, reloadRoute, onlyFetchRoute, pathToProject, pathToConfig, strapiUrl, locales } = require('./_settings.js');
+const { projectName, rebuildRoute, onlyRebuildRoute, properModels, navigationSlugs, reloadRoute, onlyFetchRoute, pathToProject, pathToConfig, locales } = require('./_settings.js');
 const app = new Koa();
 const router = new Router();
 const { exec } = require("child_process");
@@ -88,6 +88,10 @@ router.post(onlyFetchRoute, async (ctx) => {
     ctx.body = 'Data Fetched'
 })
 
+router.post(onlyRebuildRoute, async (ctx) => {
+    await triggerRebuild()
+    ctx.body = 'Triggered rebuild'
+})
 app
     .use(router.routes())
     .use(router.allowedMethods())
